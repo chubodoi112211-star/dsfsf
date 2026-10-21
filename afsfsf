@@ -1,6 +1,6 @@
-local SơnBlockLib = {}
+local SonBlock = {}
 
-function SơnBlockLib.GetBlocks(Player)
+function SonBlock.GetBlocks(Player)
     local Blocks = {}
     local MyAircraft = workspace.PIayerAircraft:FindFirstChild(Player.Name)
     if MyAircraft then
@@ -14,9 +14,9 @@ function SơnBlockLib.GetBlocks(Player)
     return Blocks
 end
 
-function SơnBlockLib.PaintSolid(Player, ActiveRemote, SetStatus, ColorName, R, G, B)
+function SonBlock.PaintSolid(Player, ActiveRemote, SetStatus, ColorName, R, G, B)
     if not ActiveRemote then SetStatus("X Not connected", Color3.fromRGB(255,120,120)) return end
-    local Blocks = SơnBlockLib.GetBlocks(Player)
+    local Blocks = SonBlock.GetBlocks(Player)
     local totalBlocks = #Blocks
     if totalBlocks == 0 then SetStatus("X No Block found!", Color3.fromRGB(255,100,100)) return end
     
@@ -30,11 +30,11 @@ function SơnBlockLib.PaintSolid(Player, ActiveRemote, SetStatus, ColorName, R, 
     SetStatus("✓ Finished • " .. totalBlocks .. "/" .. totalBlocks .. " Blocks", Color3.fromRGB(120, 255, 120))
 end
 
-function SơnBlockLib.PaintImage(Player, ActiveRemote, SetStatus, Url, HttpService)
+function SonBlock.PaintImage(Player, ActiveRemote, SetStatus, Url, HttpService)
     if not ActiveRemote then SetStatus("X Not connected", Color3.fromRGB(255,120,120)) return end
     if Url == "" then SetStatus("» Missing URL", Color3.fromRGB(255,180,80)) return end
     
-    local Blocks = SơnBlockLib.GetBlocks(Player)
+    local Blocks = SonBlock.GetBlocks(Player)
     if #Blocks == 0 then SetStatus("X No Block found!", Color3.fromRGB(255,100,100)) return end
     
     local rows = {}
@@ -80,4 +80,4 @@ function SơnBlockLib.PaintImage(Player, ActiveRemote, SetStatus, Url, HttpServi
     SetStatus("✓ Finished • " .. totalBlocks .. "/" .. totalBlocks .. " Blocks", Color3.fromRGB(120, 255, 120))
 end
 
-return SơnBlockLib
+return SonBlock
