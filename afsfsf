@@ -1,0 +1,83 @@
+local SơnBlockLib = {}
+
+function SơnBlockLib.GetBlocks(Player)
+    local Blocks = {}
+    local MyAircraft = workspace.PIayerAircraft:FindFirstChild(Player.Name)
+    if MyAircraft then
+        for _, F2 in pairs(MyAircraft:GetChildren()) do
+            if F2:IsA("Model") and F2.Name == "BlockStd" then
+                local BK = F2:FindFirstChild("BlockStd")
+                if BK then table.insert(Blocks, BK) end
+            end
+        end
+    end
+    return Blocks
+end
+
+function SơnBlockLib.PaintSolid(Player, ActiveRemote, SetStatus, ColorName, R, G, B)
+    if not ActiveRemote then SetStatus("X Not connected", Color3.fromRGB(255,120,120)) return end
+    local Blocks = SơnBlockLib.GetBlocks(Player)
+    local totalBlocks = #Blocks
+    if totalBlocks == 0 then SetStatus("X No Block found!", Color3.fromRGB(255,100,100)) return end
+    
+    for i, Block in ipairs(Blocks) do
+        SetStatus("» Painting " .. ColorName .. " [" .. i .. "/" .. totalBlocks .. "]")
+        pcall(function()
+            ActiveRemote:InvokeServer(Block, Color3.fromRGB(R,G,B))
+        end)
+        task.wait(0.01)
+    end
+    SetStatus("✓ Finished • " .. totalBlocks .. "/" .. totalBlocks .. " Blocks", Color3.fromRGB(120, 255, 120))
+end
+
+function SơnBlockLib.PaintImage(Player, ActiveRemote, SetStatus, Url, HttpService)
+    if not ActiveRemote then SetStatus("X Not connected", Color3.fromRGB(255,120,120)) return end
+    if Url == "" then SetStatus("» Missing URL", Color3.fromRGB(255,180,80)) return end
+    
+    local Blocks = SơnBlockLib.GetBlocks(Player)
+    if #Blocks == 0 then SetStatus("X No Block found!", Color3.fromRGB(255,100,100)) return end
+    
+    local rows = {}
+    for _, b in ipairs(Blocks) do
+        local y = math.floor(b.Position.Y + 0.5)
+        rows[y] = (rows[y] or 0) + 1
+    end
+    
+    local h = 0
+    local w = 0
+    for _, count in pairs(rows) do
+        h = h + 1
+        if count > w then w = count end
+    end
+    
+    if w == 0 or h == 0 then SetStatus("X Invalid grid size", Color3.fromRGB(255,100,100)) return end
+
+    SetStatus("» Fetching image (" .. w .. "x" .. h .. ")...")
+    local Api = "https://pixel-api-l5ak.onrender.com/get_pixels?url=" .. HttpService:UrlEncode(Url) .. "&w=" .. w .. "&h=" .. h
+    local Success, Res = pcall(function() return game:HttpGet(Api) end)
+    
+    if not Success then SetStatus("X Failed to fetch image", Color3.fromRGB(255,120,120)) return end
+    
+    local Pixels = HttpService:JSONDecode(Res)
+    local totalBlocks = math.min(#Blocks, #Pixels)
+    
+    table.sort(Blocks, function(a, b)
+        if math.abs(a.Position.Y - b.Position.Y) > 0.5 then return a.Position.Y > b.Position.Y end
+        if math.abs(a.Position.X - b.Position.X) > 0.5 then return a.Position.X < b.Position.X end
+        return a.Position.Z < b.Position.Z
+    end)
+    
+    for i = 1, totalBlocks do
+        local Bl = Blocks[i]
+        if Pixels[i] then
+            SetStatus("» Painting image [" .. i .. "/" .. totalBlocks .. "]")
+            pcall(function()
+                ActiveRemote:InvokeServer(Bl, Color3.fromRGB(Pixels[i][1], Pixels[i][2], Pixels[i][3]))
+            end)
+        end
+        task.wait(0.01)
+    end
+    SetStatus("✓ Finished • " .. totalBlocks .. "/" .. totalBlocks .. " Blocks", Color3.fromRGB(120, 255, 120))
+end
+
+return SơnBlockLib
